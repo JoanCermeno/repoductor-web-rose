@@ -1,44 +1,48 @@
-const musicContainer = document.querySelector(".music-container");
+const musicPlayer = document.querySelector(".music-player");
 const playBtn = document.querySelector("#play");
 const prevBtn = document.querySelector("#prev");
 const nextBtn = document.querySelector("#next");
 const audio = document.querySelector("#audio");
-const progres = document.querySelector(".progres");
-const containerProgres = document.querySelector(".container-progres");
+const progress = document.querySelector("#progress");
+const progressContainer = document.querySelector("#progress-container");
 const title = document.querySelector(".title");
 const cover = document.querySelector("#cover");
 const musicsPlayList = document.querySelector("#musicsPlayList");
-const containerMusicPlayList = document.querySelector(".listMusic");
+const playlistOverlay = document.querySelector("#playlist-overlay");
+const playlistBtn = document.querySelector("#playlist-btn");
+const closePlaylistBtn = document.querySelector("#close-playlist");
+const playIcon = document.querySelector("#play-icon");
+const currentTimeEl = document.querySelector("#currenTime");
+const endSondEl = document.querySelector("#timeEndSond");
 
-// song titles, osea titulos de sonidos
-
+// song titles
 const songs = ["Goddess_Nightcore", "POP-STARS", "HOPEX-Warrior"];
 
-//keep track of songs
-let songIndex = 2;
+let songIndex = 0;
 
-//initially load song info DOM
+// initially load song info
 loadSong(songs[songIndex]);
 
-//actualizar los detalles de la cansion
 function loadSong(song) {
-  title.innerText = song;
+  title.innerText = song.replace(/_/g, ' '); // Beautify title
   audio.src = `music/${song}.mp3`;
   cover.src = `img/${song}.jpg`;
+  updatePlaylistActiveState();
 }
 
 function playSong() {
-  musicContainer.classList.add("play");
-  playBtn.querySelector("i.fas").classList.remove("fa-play");
-  playBtn.querySelector("i.fas").classList.add("fa-pause");
+  musicPlayer.classList.add("play");
+  playIcon.classList.remove("fa-play");
+  playIcon.classList.remove("fa-play-circle");
+  playIcon.classList.add("fa-pause");
   audio.play();
   updateTimeduration();
 }
 
 function pauseSong() {
-  musicContainer.classList.remove("play");
-  playBtn.querySelector("i.fas").classList.add("fa-play");
-  playBtn.querySelector("i.fas").classList.remove("fa-pause");
+  musicPlayer.classList.remove("play");
+  playIcon.classList.add("fa-play");
+  playIcon.classList.remove("fa-pause");
   audio.pause();
 }
 
@@ -50,6 +54,7 @@ function prevSong() {
   loadSong(songs[songIndex]);
   playSong();
 }
+
 function nextSong() {
   songIndex++;
   if (songIndex > songs.length - 1) {
@@ -58,26 +63,24 @@ function nextSong() {
   loadSong(songs[songIndex]);
   playSong();
 }
-function updateProgres(e) {
-  /*console.log(e.srcElement.currentTime)*/
+
+function updateProgress(e) {
   const { duration, currentTime } = e.srcElement;
-  const progresPercent = (currentTime / duration) * 100;
-  progres.style.width = `${progresPercent}%`;
-  //sumamos segundo a segundo...
-  document.querySelector("#currenTime").innerText =
-    segundosAMinutosSegundos(currentTime);
+  if(isNaN(duration)) return;
+  const progressPercent = (currentTime / duration) * 100;
+  progress.style.width = `${progressPercent}%`;
+  currentTimeEl.innerText = segundosAMinutosSegundos(currentTime);
 }
 
-function setProgres(e) {
+function setProgress(e) {
   const width = this.clientWidth;
   const clickX = e.offsetX;
-  /*console.log(clickX);*/
   const duration = audio.duration;
   audio.currentTime = (clickX / width) * duration;
 }
-//eventos listener
+
 playBtn.addEventListener("click", () => {
-  const isPlaying = musicContainer.classList.contains("play");
+  const isPlaying = musicPlayer.classList.contains("play");
   if (isPlaying) {
     pauseSong();
   } else {
@@ -86,63 +89,75 @@ playBtn.addEventListener("click", () => {
 });
 
 function updateTimeduration() {
-  //set value in the DOM, but watin one second
-  setTimeout(() => {
-    const endSond = segundosAMinutosSegundos(audio.duration);
-    document.querySelector("#timeEndSond").innerText = endSond;
-  }, 250);
+  if(audio.duration) {
+      endSondEl.innerText = segundosAMinutosSegundos(audio.duration);
+  }
 }
 
+// Ensure duration updates when metadata loads (jumping songs)
+audio.addEventListener('loadedmetadata', () => {
+    endSondEl.innerText = segundosAMinutosSegundos(audio.duration);
+});
+
+
 function segundosAMinutosSegundos(segundos) {
-  // Calculamos los minutos y segundos como en la respuesta anterior
+  if (isNaN(segundos)) return "00:00";
   const minutos = Math.floor(segundos / 60);
-  const segundosRestantes = segundos % 60;
-
-  // Formateamos los valores, asegurando dos dígitos y eliminando decimales
+  const segundosRestantes = Math.floor(segundos % 60);
   const minutosFormateados = String(minutos).padStart(2, "0");
-  const segundosFormateados = String(Math.floor(segundosRestantes)).padStart(
-    2,
-    "0"
-  ); // Usamos Math.floor para eliminar decimales
-
+  const segundosFormateados = String(segundosRestantes).padStart(2, "0");
   return `${minutosFormateados}:${segundosFormateados}`;
 }
 
-//show Music Playlist on menu
-function showMusicPlaylist(listMusics) {
-  return listMusics.reduce((listaHTML, nombreCancion) => {
-    return listaHTML + `<li>${nombreCancion}</li>`;
-  }, "");
-}
-function openMenuPlayList(e) {
-  console.log("abriendoMenu");
-  cover.classList.toggle("menuOpenend");
-  containerMusicPlayList.classList.toggle("hidden");
+// Show Music Playlist on menu
+function renderPlaylist() {
+  musicsPlayList.innerHTML = songs.map((song, index) => {
+    return `<li data-index="${index}" class="${index === songIndex ? 'active' : ''}">${song.replace(/_/g, ' ')}</li>`;
+  }).join('');
 }
 
-//funcion para selecionar el sonido desde la palylist
-function selectMusicFromPlaylist(eventClick) {
-  const nameMusic = eventClick.originalTarget.innerText;
-  console.log(nameMusic);
-  //genial con esto ya tengo el nombre de la musica, Mandamos a reproducir dicha musica
-  loadSong(nameMusic);
-  playSong();
+function updatePlaylistActiveState() {
+  const items = musicsPlayList.querySelectorAll('li');
+  // may be called before playlist renders
+  if(!items.length) return; 
+  items.forEach(item => item.classList.remove('active'));
+  const activeItem = musicsPlayList.querySelector(`li[data-index="${songIndex}"]`);
+  if (activeItem) activeItem.classList.add('active');
 }
 
-musicsPlayList.innerHTML = showMusicPlaylist(songs);
+// Open/Close Playlist
+playlistBtn.addEventListener("click", () => {
+  playlistOverlay.classList.remove("hidden");
+});
 
-//evento para mostar el menu de las canciones
-cover.addEventListener("mouseover", openMenuPlayList);
-// evento para cambiar musica desde la playlist
-musicsPlayList.addEventListener("click", selectMusicFromPlaylist);
+closePlaylistBtn.addEventListener("click", () => {
+  playlistOverlay.classList.add("hidden");
+});
 
-//cambiar de cansion Cahnge song event
+// Click outside to close playlist
+playlistOverlay.addEventListener("click", (e) => {
+  if (e.target === playlistOverlay) {
+    playlistOverlay.classList.add("hidden");
+  }
+});
+
+// Select music from playlist
+musicsPlayList.addEventListener("click", (e) => {
+  const listItem = e.target.closest('li');
+  if (listItem) {
+    songIndex = parseInt(listItem.getAttribute('data-index'));
+    loadSong(songs[songIndex]);
+    playSong();
+    playlistOverlay.classList.add("hidden"); // Close on play
+  }
+});
+
+// Initial render
+renderPlaylist();
+
+// Event listeners
 prevBtn.addEventListener("click", prevSong);
 nextBtn.addEventListener("click", nextSong);
-
-//barra de progess
-audio.addEventListener("timeupdate", updateProgres);
-
-containerProgres.addEventListener("click", setProgres);
-
+audio.addEventListener("timeupdate", updateProgress);
+progressContainer.addEventListener("click", setProgress);
 audio.addEventListener("ended", nextSong);

@@ -1,67 +1,88 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="estilos.css" />
     <link
       rel="stylesheet"
-      type="text/css"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
     <title>Reproductor web</title>
   </head>
   <body>
-    <div class="container-header">
-      <h3>Welcome to my</h3>
-      <h1 class="header-text">Music Player 🎶</h1>
-      <h6>create by Joan Cermeño</h6>
-    </div>
+    <!-- Background elements for Glassmorphism -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-3"></div>
 
-    <div class="music-container">
-      <div class="music-info">
-        <h4 class="title"></h4>
-        <!-- controles de tiempo -->
-        <div class="container-progres">
-          <div class="progres"></div>
-          <div class="container-timer">
-            <span id="currenTime">00:00</span>
-            <span id="timeEndSond">00:00</span>
-          </div>
+    <div class="music-player">
+      <div class="header">
+        <button class="icon-btn tooltip" id="playlist-btn" aria-label="Playlist">
+          <i class="fas fa-list-ul"></i>
+        </button>
+        <div class="header-info">
+          <span class="now-playing">REPRODUCIENDO AHORA</span>
+        </div>
+        <button class="icon-btn tooltip" aria-label="Opciones">
+          <i class="fas fa-ellipsis-v"></i>
+        </button>
+      </div>
+
+      <div class="art-container">
+        <img src="img/Goddess_Nightcore.jpg" alt="Portada del álbum" id="cover" class="cover-art" />
+      </div>
+
+      <div class="track-info">
+        <h2 class="title"></h2>
+        <p class="artist">Artista Desconocido</p>
+      </div>
+
+      <div class="progress-wrapper">
+        <div class="time">
+          <span id="currenTime">00:00</span>
+          <span id="timeEndSond">00:00</span>
+        </div>
+        <div class="progress-bar-container" id="progress-container">
+          <div class="progress" id="progress"></div>
         </div>
       </div>
 
+      <div class="controls">
+        <button class="control-btn secondary-btn" id="prev" aria-label="Anterior">
+          <i class="fas fa-backward-step"></i>
+        </button>
+        <button class="control-btn primary-btn" id="play" aria-label="Reproducir/Pausar">
+          <i class="fas fa-play" id="play-icon"></i>
+        </button>
+        <button class="control-btn secondary-btn" id="next" aria-label="Siguiente">
+          <i class="fas fa-forward-step"></i>
+        </button>
+      </div>
+
       <audio src="music/Goddess_Nightcore.mp3" id="audio"></audio>
-
-      <div class="img-container">
-        <img src="img/Goddess_Nightcore.jpg" alt="music-cover" id="cover" />
-      </div>
-
-      <div class="navigation">
-        <button class="action-btn" id="prev">
-          <i class="fas fa-backward"></i>
-        </button>
-        <button class="action-btn action-btn-big" id="play">
-          <i class="fas fa-play"></i>
-        </button>
-        <button class="action-btn" id="next">
-          <i class="fas fa-forward"></i>
-        </button>
-      </div>
     </div>
 
-    <section class="listMusic hidden">
-      <ul id="musicsPlayList">
-        <li>1</li>
-        <li>2</li>
-        <li>3</li>
-      </ul>
-    </section>
+    <!-- Playlist Modal -->
+    <div class="playlist-overlay hidden" id="playlist-overlay">
+      <div class="playlist-modal">
+        <div class="playlist-header">
+          <h3>Lista de Reproducción</h3>
+          <button class="close-btn" id="close-playlist">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+        <ul id="musicsPlayList" class="playlist-list">
+          <!-- Playlist items go here -->
+        </ul>
+      </div>
+    </div>
 
     <script type="text/javascript" src="script.js"></script>
   </body>
